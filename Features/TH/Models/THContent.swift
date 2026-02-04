@@ -1,10 +1,3 @@
-//
-//  THContent.swift
-//  Learn-Phonics
-//
-//  Created by Koki Iwaki on 2026/02/04.
-//
-
 import Foundation
 
 enum THContent {
@@ -16,12 +9,19 @@ enum THContent {
             minimalPairs: [
                 .init(correct: "think", commonMistake: "sink", noteJP: "sっぽくなると通じにくい"),
                 .init(correct: "thin", commonMistake: "sin"),
+                .init(correct: "thank", commonMistake: "tank"),
                 .init(correct: "three", commonMistake: "free"),
-                .init(correct: "thick", commonMistake: "tick")
+                .init(correct: "thick", commonMistake: "tick"),
+                .init(correct: "thumb", commonMistake: "sum")
             ],
+            // ✅ Practiceは「単語」にする（ここが話す練習で使われる）
             phrases: [
-                .init("I think three things.", noteJP: "ゆっくりでOK"),
-                .init("Think thin thoughts.")
+                .init("think", noteJP: "無声音 /θ/"),
+                .init("thin"),
+                .init("thank"),
+                .init("three"),
+                .init("thick"),
+                .init("thumb")
             ]
         )
 
@@ -33,14 +33,22 @@ enum THContent {
                 .init(correct: "this", commonMistake: "dis", noteJP: "dに寄るのが定番ミス"),
                 .init(correct: "they", commonMistake: "day"),
                 .init(correct: "then", commonMistake: "den"),
-                .init(correct: "those", commonMistake: "doze")
+                .init(correct: "those", commonMistake: "doze"),
+                .init(correct: "these", commonMistake: "deez"),
+                .init(correct: "there", commonMistake: "dare")
             ],
+            // ✅ Practiceは「単語」にする
             phrases: [
-                .init("This is the one.", noteJP: "the /ðə/ も一緒に練習"),
-                .init("They think that this is theirs.")
+                .init("this", noteJP: "有声音 /ð/"),
+                .init("they"),
+                .init("then"),
+                .init("those"),
+                .init("these"),
+                .init("there")
             ]
         )
 
-        return InMemoryTHLessonRepository(all: [eth, theta]) // /ð/→/θ/ の順で成果出やすい
+        return InMemoryTHLessonRepository(all: [eth, theta]) // /ð/→/θ/ の順
     }
 }
+

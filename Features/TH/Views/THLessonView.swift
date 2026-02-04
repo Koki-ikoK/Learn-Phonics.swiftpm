@@ -49,16 +49,27 @@ struct THLessonView: View {
                 NavigationLink {
                     THQuizView(repo: repo, store: store, sound: vm.selectedSound)
                 } label: {
-                    PrimaryButton(title: "聞き分けクイズ", systemImage: "ear") { }
+                    HStack(spacing: 10) {
+                        Image(systemName: "ear")
+                        Text("聞き分けクイズ").fontWeight(.semibold)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.borderedProminent)
 
                 NavigationLink {
                     THPracticeView(repo: repo, store: store, sound: vm.selectedSound)
                 } label: {
-                    PrimaryButton(title: "話す練習（録音）", systemImage: "mic") { }
+                    HStack(spacing: 10) {
+                        Image(systemName: "mic")
+                        Text("話す練習（録音）").fontWeight(.semibold)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.borderedProminent)
+
             }
             .padding(16)
         }

@@ -28,7 +28,7 @@ struct THPracticeView: View {
 
         ScrollView {
             VStack(spacing: 14) {
-                Card(title: "フレーズ", subtitle: sound.displayTitle) {
+                Card(title: "単語", subtitle: sound.displayTitle) {
                     Text(phrase.text)
                         .font(.title3)
                         .fontWeight(.semibold)
@@ -47,7 +47,7 @@ struct THPracticeView: View {
                     }
                 }
 
-                Card(title: "録音", subtitle: "まずは録音→再生で練習を成立させる") {
+                Card(title: "録音", subtitle: "お手本→録音→再生でTHを矯正") {
                     WaveformView(levels: recorder.levels)
 
                     HStack(spacing: 10) {
