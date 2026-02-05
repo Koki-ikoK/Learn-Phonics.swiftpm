@@ -3,13 +3,15 @@ import SwiftUI
 struct THLessonView: View {
     private let repo: THLessonRepository
     private let store: ProgressStore
+    private let sound: THSound
 
     @StateObject private var vm: THLessonViewModel
 
-    init(repo: THLessonRepository, store: ProgressStore) {
+    init(repo: THLessonRepository, store: ProgressStore, sound: THSound) {
         self.repo = repo
         self.store = store
-        _vm = StateObject(wrappedValue: THLessonViewModel(repo: repo, store: store))
+        self.sound = sound
+        _vm = StateObject(wrappedValue: THLessonViewModel(repo: repo, store: store, sound: sound))
     }
 
     var body: some View {
@@ -18,25 +20,29 @@ struct THLessonView: View {
         ScrollView {
             VStack(spacing: 14) {
 
-                Card(title: "TH", subtitle: "日本人がつまずきやすい /θ/ と /ð/") {
+                Card(title: sound.displayTitle, subtitle: sound.jpHint) {
                     Text("正答率: \(Int(vm.progress.accuracy * 100))%  / 練習: \(vm.progress.practiceCount)回")
                         .font(.subheadline)
+                        .foregroundStyle(.secondary)
                 }
 
-                Card(title: "音を選ぶ", subtitle: "まずは /ð/ (this) → /θ/ (think) の順がおすすめ") {
-                    Picker("Sound", selection: Binding(
-                        get: { vm.selectedSound },
-                        set: { vm.select($0) }
-                    )) {
-                        ForEach(THSound.allCases) { s in
-                            Text(s.displayTitle).tag(s)
+                // TH比較導線（/ð/ ↔ /θ/）
+                Card(title: "比較（THだけ）", subtitle: "違いは「声が乗るか」") {
+                    if sound == .eth {
+                        NavigationLink {
+                            THLessonView(repo: repo, store: store, sound: .theta)
+                        } label: {
+                            CompareRow(title: "無声音 /θ/（think）へ", detail: "息だけで擦る")
                         }
+                        .buttonStyle(.plain)
+                    } else {
+                        NavigationLink {
+                            THLessonView(repo: repo, store: store, sound: .eth)
+                        } label: {
+                            CompareRow(title: "有声音 /ð/（this）へ", detail: "喉も震わせる")
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .pickerStyle(.segmented)
-
-                    Text(vm.selectedSound.jpHint)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
                 }
 
                 Card(title: "概要", subtitle: nil) {
@@ -46,34 +52,65 @@ struct THLessonView: View {
                         .foregroundStyle(.secondary)
                 }
 
+                // 画面遷移：NavigationLink ラベル内に Button を入れない
                 NavigationLink {
-                    THQuizView(repo: repo, store: store, sound: vm.selectedSound)
+                    THQuizView(repo: repo, store: store, sound: sound)
                 } label: {
-                    HStack(spacing: 10) {
-                        Image(systemName: "ear")
-                        Text("聞き分けクイズ").fontWeight(.semibold)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
+                    NavButtonLikeRow(icon: "ear", title: "聞き分けクイズ")
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.plain)
 
                 NavigationLink {
-                    THPracticeView(repo: repo, store: store, sound: vm.selectedSound)
+                    THPracticeView(repo: repo, store: store, sound: sound)
                 } label: {
-                    HStack(spacing: 10) {
-                        Image(systemName: "mic")
-                        Text("話す練習（録音）").fontWeight(.semibold)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
+                    NavButtonLikeRow(icon: "mic", title: "話す練習（録音）")
                 }
-                .buttonStyle(.borderedProminent)
-
+                .buttonStyle(.plain)
             }
             .padding(16)
         }
-        .navigationTitle("TH Lesson")
+        .navigationTitle("Lesson")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+private struct CompareRow: View {
+    let title: String
+    let detail: String
+
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title).font(.headline)
+                Text(detail).font(.subheadline).foregroundStyle(.secondary)
+            }
+            Spacer()
+            Image(systemName: "arrow.right.circle.fill")
+                .font(.title3)
+                .foregroundStyle(.secondary)
+        }
+        .padding(12)
+        .background(.thinMaterial)
+        .cornerRadius(14)
+    }
+}
+
+private struct NavButtonLikeRow: View {
+    let icon: String
+    let title: String
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+            Text(title).fontWeight(.semibold)
+            Spacer()
+            Image(systemName: "chevron.right")
+                .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 14)
+        .padding(.horizontal, 14)
+        .background(.thinMaterial)
+        .cornerRadius(16)
     }
 }
 

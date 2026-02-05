@@ -1,17 +1,13 @@
-//
-//  RootView.swift
-//  Learn-Phonics
-//
-//  Created by Koki Iwaki on 2026/02/04.
-//
-
 import SwiftUI
 
 struct RootView: View {
+    private let repo: THLessonRepository = THContent.makeRepository()
+    private let store: any ProgressStore = UserDefaultsProgressStore() // ←具体型に置換
+
     var body: some View {
         NavigationStack {
-            THHomeView()
-                .navigationTitle("Phonics (JP)")
+            PhonemeSelectView(repo: repo, store: store)
         }
     }
 }
+
