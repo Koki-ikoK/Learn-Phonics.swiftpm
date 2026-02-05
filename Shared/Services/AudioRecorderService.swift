@@ -1,28 +1,40 @@
-//
-//  AudioRecorderService.swift
-//  Learn-Phonics
-//
-//  Created by Koki Iwaki on 2026/02/04.
-//
-
-import AVFoundation
 import Foundation
+import AVFoundation
 
-final class AudioRecorderService: NSObject, ObservableObject, AVAudioRecorderDelegate {
+@MainActor
+final class AudioRecorderService: NSObject, ObservableObject {
+
+    // 録音状態（外からは読み取りだけ）
     @Published private(set) var isRecording: Bool = false
-    @Published private(set) var levels: [Float] = []   // waveform用（簡易）
-    @Published private(set) var lastRecordingURL: URL?
+
+    // 波形表示用（0.0〜1.0 の配列）
+    @Published private(set) var levels: [Float] = []
 
     private var recorder: AVAudioRecorder?
     private var meterTimer: Timer?
 
-    func start() throws {
+    // 録音ファイルのURL（必要ならUI側で利用）
+    var recordingURL: URL? { recorder?.url }
+    @MainActor
+    deinit {
+        meterTimer?.invalidate()
+    }
+
+    /// 録音開始
+    func startRecording() throws {
+        // すでに録音中なら何もしない
+        if isRecording { return }
+
         let session = AVAudioSession.sharedInstance()
-        try session.setCategory(.playAndRecord, mode: .spokenAudio, options: [.defaultToSpeaker, .allowBluetooth])
+
+        // allowBluetooth は allowBluetoothHFP に置き換え（警告対策）
+        try session.setCategory(.playAndRecord,
+                                mode: .default,
+                                options: [.defaultToSpeaker, .allowBluetoothHFP])
         try session.setActive(true)
 
-        let url = FileManager.default.temporaryDirectory
-            .appendingPathComponent("recording-\(UUID().uuidString).m4a")
+        // 一時ファイルに保存
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("recording.m4a")
 
         let settings: [String: Any] = [
             AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
@@ -32,38 +44,79 @@ final class AudioRecorderService: NSObject, ObservableObject, AVAudioRecorderDel
         ]
 
         let r = try AVAudioRecorder(url: url, settings: settings)
-        r.isMeteringEnabled = true
         r.delegate = self
+        r.isMeteringEnabled = true
+        r.prepareToRecord()
         r.record()
 
         recorder = r
         isRecording = true
-        levels = []
-        lastRecordingURL = nil
 
+        levels.removeAll()
+        startMetering()
+    }
+
+    /// 録音停止
+    func stopRecording() {
+        guard isRecording else { return }
+
+        stopMetering()
+        recorder?.stop()
+        recorder = nil
+        isRecording = false
+    }
+
+    // MARK: - Metering
+
+    private func startMetering() {
         meterTimer?.invalidate()
+
+        // 20fpsくらい（0.05秒）
         meterTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
-            guard let self, let recorder = self.recorder else { return }
-            recorder.updateMeters()
-            let db = recorder.averagePower(forChannel: 0)
-            let normalized = Self.normalize(db: db)
+            guard let self else { return }
+            guard let r = self.recorder, r.isRecording else { return }
+
+            r.updateMeters()
+
+            // dB: -160...0 くらい
+            let db = r.averagePower(forChannel: 0)
+
+            // 見た目用に -60...0 を 0...1 にマッピング
+            let minDB: Float = -60
+            let clamped = max(minDB, min(0, db))
+            let normalized = (clamped - minDB) / (0 - minDB)   // 0...1
+
             self.levels.append(normalized)
-            if self.levels.count > 120 { self.levels.removeFirst(self.levels.count - 120) }
+
+            // 配列が無限に増えないように上限をかける
+            let maxCount = 120
+            if self.levels.count > maxCount {
+                self.levels.removeFirst(self.levels.count - maxCount)
+            }
+        }
+
+        meterTimer?.tolerance = 0.02
+    }
+
+    private func stopMetering() {
+        meterTimer?.invalidate()
+        meterTimer = nil
+    }
+}
+
+// MARK: - AVAudioRecorderDelegate
+extension AudioRecorderService: AVAudioRecorderDelegate {
+
+    nonisolated func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
+        Task { @MainActor in
+            self.stopRecording()
         }
     }
 
-    func stop() {
-        recorder?.stop()
-        meterTimer?.invalidate()
-        meterTimer = nil
-        isRecording = false
-        lastRecordingURL = recorder?.url
-        recorder = nil
-    }
-
-    private static func normalize(db: Float) -> Float {
-        // db (-60〜0) → 0〜1（ざっくり）
-        let clamped = max(-60, min(0, db))
-        return (clamped + 60) / 60
+    nonisolated func audioRecorderEncodeErrorDidOccur(_ recorder: AVAudioRecorder, error: Error?) {
+        Task { @MainActor in
+            self.stopRecording()
+        }
     }
 }
+

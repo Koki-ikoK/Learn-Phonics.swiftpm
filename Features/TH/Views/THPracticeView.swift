@@ -53,16 +53,16 @@ struct THPracticeView: View {
                     HStack(spacing: 10) {
                         if recorder.isRecording {
                             PrimaryButton(title: "停止", systemImage: "stop.fill") {
-                                recorder.stop()
+                                recorder.stopRecording()
                             }
                         } else {
                             PrimaryButton(title: "録音", systemImage: "mic.fill") {
-                                do { try recorder.start() } catch { print(error) }
+                                do { try recorder.startRecording() } catch { print(error) }
                             }
                         }
 
                         PrimaryButton(title: "再生", systemImage: "play.fill") {
-                            guard let url = recorder.lastRecordingURL else { return }
+                            guard let url = recorder.recordingURL else { return }
                             audioPlayer = try? AVAudioPlayer(contentsOf: url)
                             audioPlayer?.prepareToPlay()
                             audioPlayer?.play()
