@@ -26,25 +26,6 @@ struct THLessonView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                // TH比較導線（/ð/ ↔ /θ/）
-                Card(title: "比較（THだけ）", subtitle: "違いは「声が乗るか」") {
-                    if sound == .eth {
-                        NavigationLink {
-                            THLessonView(repo: repo, store: store, sound: .theta)
-                        } label: {
-                            CompareRow(title: "無声音 /θ/（think）へ", detail: "息だけで擦る")
-                        }
-                        .buttonStyle(.plain)
-                    } else {
-                        NavigationLink {
-                            THLessonView(repo: repo, store: store, sound: .eth)
-                        } label: {
-                            CompareRow(title: "有声音 /ð/（this）へ", detail: "喉も震わせる")
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-
                 Card(title: "概要", subtitle: nil) {
                     Text(lesson.overviewJP)
                     Divider().padding(.vertical, 6)
@@ -71,27 +52,6 @@ struct THLessonView: View {
         }
         .navigationTitle("Lesson")
         .navigationBarTitleDisplayMode(.inline)
-    }
-}
-
-private struct CompareRow: View {
-    let title: String
-    let detail: String
-
-    var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title).font(.headline)
-                Text(detail).font(.subheadline).foregroundStyle(.secondary)
-            }
-            Spacer()
-            Image(systemName: "arrow.right.circle.fill")
-                .font(.title3)
-                .foregroundStyle(.secondary)
-        }
-        .padding(12)
-        .background(.thinMaterial)
-        .cornerRadius(14)
     }
 }
 
