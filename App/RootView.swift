@@ -10,8 +10,10 @@ struct RootView: View {
 
     var body: some View {
         NavigationStack {
-            StartView(repo: repo, store: store)
+            PhonemeSelectView(repo: repo, store: store)
         }
+        
+        .navigationViewStyle(.stack)
     }
 }
 
