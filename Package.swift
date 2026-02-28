@@ -8,13 +8,13 @@ import PackageDescription
 import AppleProductTypes
 
 let package = Package(
-    name: "Learn-Phonics",
+    name: "Phonix",
     platforms: [
         .iOS("17.0")
     ],
     products: [
         .iOSApplication(
-            name: "Learn-Phonics",
+            name: "Phonix",
             targets: ["AppModule"],
             bundleIdentifier: "com.Koki.Learn-Phonics",
             teamIdentifier: "DQVBK2HT57",

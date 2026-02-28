@@ -1,16 +1,8 @@
-//
-//  GeneralLessonView.swift
-//  Learn-Phonics
-//
-//  Created by Koki Iwaki on 2026/03/01.
-//
-
 import SwiftUI
 
 struct GeneralLessonView: View {
-    let item: PhonemeItem // あなたの作ったデータモデル
+    let item: PhonemeItem
 
-    // 🌟 魔法の辞書：記号に合わせて概要とコツを自動で切り替える！
     private var lessonData: (overview: String, mouthTip: String) {
         switch item.symbol.lowercased() {
         case "f": return ("上の歯で下唇を軽く押さえ、隙間から息を摩擦させて出す無声音です。", "下唇の内側を上の歯に軽く当てるのがコツ！")
@@ -28,69 +20,155 @@ struct GeneralLessonView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 14) {
-                // 📝 概要カード
-                Card(title: "概要", subtitle: nil) {
-                    Text(lessonData.overview)
-                    Divider().padding(.vertical, 6)
-                    Text("口のコツ: \(lessonData.mouthTip)")
-                        .foregroundStyle(.secondary)
-                }
+        ZStack {
+            // 🌟 1. 背景：漆黒ではなく、深みのある「ミッドナイト」グラデーション
+            Color(red: 0.05, green: 0.05, blue: 0.08)
+                .ignoresSafeArea()
+            
+            RadialGradient(colors: [Color.orange.opacity(0.15), .clear],
+                           center: .topTrailing, startRadius: 0, endRadius: 500)
+                .ignoresSafeArea()
 
-                // 🎧 聞き分けクイズ（TH以外はすべて準備中！）
-                NavigationLink {
-                    ContentUnavailableView(
-                        "Coming Soon",
-                        systemImage: "ear.badge.waveform",
-                        description: Text("/\(item.symbol)/ の聞き分けクイズは現在開発中です！\nアップデートをお待ちください。")
-                    )
-                } label: {
-                    GeneralNavButtonRow(icon: "ear", title: "聞き分けクイズ")
-                }
-                .buttonStyle(.plain)
-
-                // 🎙 AI発音テスト（f, v は飛べる！それ以外は準備中！）
-                NavigationLink {
-                    if item.symbol.lowercased() == "f" {
-                        PhonicsAICheckView(targetSymbol: "fan")
-                    } else if item.symbol.lowercased() == "v" {
-                        PhonicsAICheckView(targetSymbol: "van")
-                    } else {
-                        ContentUnavailableView(
-                            "Coming Soon",
-                            systemImage: "mic.badge.plus",
-                            description: Text("/\(item.symbol)/ のAI発音判定モデルは現在トレーニング中です！\nアップデートをお待ちください。")
-                        )
+            ScrollView {
+                VStack(spacing: 32) {
+                    
+                    // 🌟 2. ヒーローセクション：暗い背景で「発光」させる
+                    VStack(spacing: 12) {
+                        ZStack {
+                            // 背景のグロー（光彩）
+                            Circle()
+                                .fill(Color.orange.opacity(0.2))
+                                .frame(width: 160, height: 160)
+                                .blur(radius: 30)
+                            
+                            Circle()
+                                .fill(LinearGradient(colors: [.orange, .red], startPoint: .topLeading, endPoint: .bottomTrailing))
+                                .frame(width: 120, height: 120)
+                                .shadow(color: .orange.opacity(0.5), radius: 15)
+                            
+                            Text(item.symbol)
+                                .font(.system(size: 64, weight: .black, design: .rounded))
+                                .foregroundColor(.white)
+                        }
+                        
+                        Text("Example: \(item.word)")
+                            .font(.title3.bold())
+                            .foregroundColor(.white.opacity(0.8))
                     }
-                } label: {
-                    GeneralNavButtonRow(icon: "mic.badge.plus", title: "AI発音テストに挑戦！")
+                    .padding(.top, 40)
+
+                    // 🌟 3. 概要カード：ガラスのような透明感（UltraThinMaterial）
+                    VStack(alignment: .leading, spacing: 16) {
+                        Label("Pronunciation Guide", systemImage: "flame.fill")
+                            .font(.headline)
+                            .foregroundColor(.orange)
+                        
+                        Text(lessonData.overview)
+                            .font(.body)
+                            .foregroundColor(.white.opacity(0.9))
+                            .lineSpacing(6)
+                        
+                        Divider().background(Color.white.opacity(0.2))
+                        
+                        HStack(alignment: .top, spacing: 12) {
+                            Image(systemName: "mouth.fill")
+                                .foregroundColor(.red)
+                            Text(lessonData.mouthTip)
+                                .font(.subheadline)
+                                .foregroundColor(.white.opacity(0.7))
+                        }
+                    }
+                    .padding(24)
+                    .background(.ultraThinMaterial) // 🌟 背景を透かす
+                    .cornerRadius(28)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 28)
+                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                    )
+                    .padding(.horizontal)
+
+                    // 🌟 4. アクションボタン：横並び
+                                        HStack(spacing: 20) {
+                                            NavigationLink {
+                                                GeneralPhonicsQuizView(symbol: item.symbol)
+                                                    .id(item.symbol)
+                                            } label: {
+                                                DarkSquareButton(icon: "ear.badge.waveform",
+                                                                title: "Listening",
+                                                                subtitle: "耳を鍛える",
+                                                                color: .orange)
+                                            }
+
+                                            NavigationLink {
+                                                let sym = item.symbol.lowercased()
+                                                // 🌟 全てのAI対応音素をここに復活！
+                                                if sym == "f" {
+                                                    PhonicsAICheckView(targetSymbol: "fan")
+                                                } else if sym == "v" {
+                                                    PhonicsAICheckView(targetSymbol: "van")
+                                                } else if sym == "θ" {
+                                                    PhonicsAICheckView(targetSymbol: "think")
+                                                } else if sym == "ð" {
+                                                    PhonicsAICheckView(targetSymbol: "this")
+                                                } else {
+                                                    ContentUnavailableView("Training...", systemImage: "mic.badge.plus")
+                                                        .preferredColorScheme(.dark)
+                                                }
+                                            } label: {
+                                                // 🌟 名前を「AI Check」に戻し、アイコンもAIっぽく！
+                                                DarkSquareButton(icon: "sparkles",
+                                                                title: "AI Check",
+                                                                subtitle: "発音をAI判定",
+                                                                color: .red)
+                                            }
+                                        }
+                                        .padding(.horizontal)
                 }
-                .buttonStyle(.plain)
+                .padding(.bottom, 60)
             }
-            .padding(16)
         }
         .navigationTitle("/\(item.symbol)/ Lesson")
         .navigationBarTitleDisplayMode(.inline)
+        .preferredColorScheme(.dark) // 🌟 この画面を強制的にダークモードにする
     }
 }
 
-// ボタンのデザイン部品（このファイル専用）
-struct GeneralNavButtonRow: View {
+// 🌑 ダークモード専用のスクエアボタン
+struct DarkSquareButton: View {
     let icon: String
     let title: String
+    let subtitle: String
+    let color: Color
 
     var body: some View {
-        HStack(spacing: 10) {
-            Image(systemName: icon)
-            Text(title).fontWeight(.semibold)
-            Spacer()
-            Image(systemName: "chevron.right")
-                .foregroundStyle(.secondary)
+        VStack(spacing: 18) {
+            ZStack {
+                Circle()
+                    .fill(color.opacity(0.15))
+                    .frame(width: 64, height: 64)
+                
+                Image(systemName: icon)
+                    .font(.title)
+                    .foregroundColor(color)
+                    .shadow(color: color.opacity(0.5), radius: 10)
+            }
+            
+            VStack(spacing: 6) {
+                Text(title)
+                    .font(.headline)
+                    .foregroundColor(.white)
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundColor(.white.opacity(0.5))
+            }
         }
-        .padding(.vertical, 14)
-        .padding(.horizontal, 14)
-        .background(.thinMaterial)
-        .cornerRadius(16)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 28)
+        .background(Color.white.opacity(0.05)) // 🌟 わずかに白い透明
+        .cornerRadius(32)
+        .overlay(
+            RoundedRectangle(cornerRadius: 32)
+                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+        )
     }
 }

@@ -2,7 +2,15 @@ import SwiftUI
 
 struct PhonicsAICheckView: View {
     @StateObject private var audioService = SoundAnalysisService()
-    let targetSymbol: String
+    let targetSymbol: String // 🌟 ここには今まで通り "fan" などが入ってくる
+    
+    // 🌟 1. 新規追加：全44音素データから、単語に紐づく発音記号を探し出す！
+    private var displaySymbol: String {
+        if let matched = PhonemeData.all.first(where: { $0.word.lowercased() == targetSymbol.lowercased() }) {
+            return matched.symbol // 見つかったら "f" などを返す
+        }
+        return targetSymbol // 見つからなければそのまま返す（フェイルセーフ）
+    }
     
     @State private var statusText = "マイクを準備中..."
     @State private var feedbackText = ""
@@ -13,20 +21,29 @@ struct PhonicsAICheckView: View {
 
     var body: some View {
         VStack(spacing: 30) {
-            Text("「 \(targetSymbol) 」")
-                .font(.system(size: 70, weight: .bold, design: .rounded))
-                .foregroundColor(.blue)
             
-            Button(action: {
-                print("🔊 お手本音声を再生します: \(targetSymbol)")
-            }) {
-                Label("お手本を聴く", systemImage: "speaker.wave.2.circle.fill")
-                    .font(.title3)
-                    .foregroundColor(.white)
-                    .padding()
-                    .background(Color.blue)
-                    .cornerRadius(15)
-            }
+            // 🌟 2. ここを変更！ targetSymbol ではなく displaySymbol を使う
+            // 🌟 発音記号を「光る丸いアイコン」に変更！
+                        ZStack {
+                            // 背景のぼんやりした光彩（グロー効果）
+                            Circle()
+                                .fill(Color.red.opacity(0.2))
+                                .frame(width: 180, height: 180)
+                                .blur(radius: 30)
+                            
+                            // メインの丸い背景
+                            Circle()
+                                .fill(LinearGradient(colors: [.orange, .red], startPoint: .topLeading, endPoint: .bottomTrailing))
+                                .frame(width: 140, height: 140)
+                                .shadow(color: .red.opacity(0.5), radius: 15, x: 0, y: 10)
+                            
+                            // アイコンの中の記号
+                            Text(displaySymbol)
+                                .font(.system(size: 70, weight: .black, design: .rounded))
+                                .foregroundColor(.white)
+                        }
+                        .padding(.top, 20)
+                        .padding(.bottom, 50) // 下のテキストとの余白もしっかり確保
             
             Text(statusText)
                 .font(.headline)
@@ -53,7 +70,7 @@ struct PhonicsAICheckView: View {
                         .font(.system(size: 40, weight: .bold))
                         .foregroundColor(.white)
                         .padding(25)
-                        .background(Color.green)
+                        .background(Color.red) // 🔥 ここもフェニックスカラーに！
                         .clipShape(Circle())
                         .shadow(radius: 5)
                 }
@@ -74,7 +91,7 @@ struct PhonicsAICheckView: View {
                             .bold()
                     }
                     
-                    // 🎙 マイクアイコン（待機中=赤、音検知=緑、停止=グレー）
+                    // 🎙 マイクアイコン
                     Image(systemName: "mic.fill")
                         .font(.system(size: 60))
                         .foregroundColor(audioService.isRunning ? (hasDetectedSound ? .green : .red) : .gray)
@@ -98,6 +115,11 @@ struct PhonicsAICheckView: View {
         .navigationTitle("発音チェック")
         .navigationBarTitleDisplayMode(.inline)
     }
+    
+    // ==========================================
+    // 以下の handleAudioLevel, startSession, stopAndAnalyze, generateAdvice は
+    // 全く変更なしなので、そのまま残しておいてください！
+    // ==========================================
     
     private func handleAudioLevel(_ level: Float) {
         guard audioService.isRunning else { return }
