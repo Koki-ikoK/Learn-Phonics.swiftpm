@@ -17,6 +17,7 @@ let package = Package(
             name: "Learn-Phonics",
             targets: ["AppModule"],
             bundleIdentifier: "com.Koki.Learn-Phonics",
+            teamIdentifier: "DQVBK2HT57",
             displayVersion: "1.0",
             bundleVersion: "1",
             appIcon: .asset("AppIcon"),
@@ -30,6 +31,9 @@ let package = Package(
                 .landscapeRight,
                 .landscapeLeft,
                 .portraitUpsideDown(.when(deviceFamilies: [.pad]))
+            ],
+            capabilities: [
+                .microphone(purposeString: "Unknown Usage Description")
             ],
             appCategory: .education
         )

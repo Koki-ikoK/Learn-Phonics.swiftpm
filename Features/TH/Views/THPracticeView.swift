@@ -9,9 +9,6 @@ struct THPracticeView: View {
     private let tts = TTSPromptPlayer()
 
     @StateObject private var practiceVM: THPracticeViewModel
-    @StateObject private var recorder = AudioRecorderService()
-
-    // 再生が途中で止まらないように保持
     @State private var audioPlayer: AVAudioPlayer?
 
     init(repo: THLessonRepository, store: ProgressStore, sound: THSound) {
@@ -21,13 +18,20 @@ struct THPracticeView: View {
         _practiceVM = StateObject(wrappedValue: THPracticeViewModel(repo: repo, sound: sound, player: TTSPromptPlayer()))
     }
 
+    // 🌟 PhonicsAICheckViewに渡すための正解データ
+    private var expectedMLClass: String {
+        switch sound {
+        case .theta: return "think"
+        case .eth: return "this"
+        }
+    }
 
     var body: some View {
         let lesson = practiceVM.lesson()
         let phrase = lesson.phrases[practiceVM.phraseIndex]
 
         ScrollView {
-            VStack(spacing: 14) {
+            VStack(spacing: 24) { // 少し隙間を広げて見やすく
                 Card(title: "単語", subtitle: sound.displayTitle) {
                     Text(phrase.text)
                         .font(.title3)
@@ -47,32 +51,35 @@ struct THPracticeView: View {
                     }
                 }
 
-                Card(title: "録音", subtitle: "お手本→録音→再生でTHを矯正") {
-                    WaveformView(levels: recorder.levels)
-
-                    HStack(spacing: 10) {
-                        if recorder.isRecording {
-                            PrimaryButton(title: "停止", systemImage: "stop.fill") {
-                                recorder.stopRecording()
-                            }
-                        } else {
-                            PrimaryButton(title: "録音", systemImage: "mic.fill") {
-                                do { try recorder.startRecording() } catch { print(error) }
-                            }
+                // 🌟 ここから下が大変身！ごちゃごちゃした録音機能を消して、専用のテスト画面へ繋ぐボタンに！
+                VStack(spacing: 10) {
+                    Text("学習が終わったらテストに挑戦！")
+                        .font(.headline)
+                        .foregroundColor(.gray)
+                    
+                    NavigationLink(destination: PhonicsAICheckView(targetSymbol: expectedMLClass)) {
+                        HStack {
+                            Image(systemName: "mic.badge.plus")
+                                .font(.title)
+                            Text("AI発音テストを始める")
+                                .font(.title3)
+                                .fontWeight(.bold)
                         }
-
-                        PrimaryButton(title: "再生", systemImage: "play.fill") {
-                            guard let url = recorder.recordingURL else { return }
-                            audioPlayer = try? AVAudioPlayer(contentsOf: url)
-                            audioPlayer?.prepareToPlay()
-                            audioPlayer?.play()
-                        }
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(
+                            LinearGradient(gradient: Gradient(colors: [Color.orange, Color.red]), startPoint: .leading, endPoint: .trailing)
+                        )
+                        .cornerRadius(15)
+                        .shadow(radius: 5)
                     }
                 }
+                .padding(.horizontal)
+                .padding(.top, 10)
             }
             .padding(16)
         }
         .navigationTitle("Practice")
     }
 }
-

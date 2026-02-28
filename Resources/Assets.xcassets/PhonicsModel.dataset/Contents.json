@@ -1,0 +1,13 @@
+{
+  "data" : [
+    {
+      "filename" : "PhonicsClassifier.mlmodel",
+      "idiom" : "universal",
+      "universal-type-identifier" : "com.apple.coreml.model"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

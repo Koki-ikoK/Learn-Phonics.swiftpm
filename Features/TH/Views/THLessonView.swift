@@ -14,12 +14,19 @@ struct THLessonView: View {
         _vm = StateObject(wrappedValue: THLessonViewModel(repo: repo, store: store, sound: sound))
     }
 
+    // 🌟 追加：ここで、AIに渡す正解データ（think か this）を決定する！
+    private var expectedMLClass: String {
+        switch sound {
+        case .theta: return "think"
+        case .eth: return "this"
+        }
+    }
+
     var body: some View {
         let lesson = vm.lesson()
 
         ScrollView {
             VStack(spacing: 14) {
-
                 Card(title: sound.displayTitle, subtitle: sound.jpHint) {
                     Text("正答率: \(Int(vm.progress.accuracy * 100))%  / 練習: \(vm.progress.practiceCount)回")
                         .font(.subheadline)
@@ -33,7 +40,6 @@ struct THLessonView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                // 画面遷移：NavigationLink ラベル内に Button を入れない
                 NavigationLink {
                     THQuizView(repo: repo, store: store, sound: sound)
                 } label: {
@@ -41,10 +47,12 @@ struct THLessonView: View {
                 }
                 .buttonStyle(.plain)
 
+                // 🌟 最大の変更点：THPracticeViewを消し去り、直接AIテスト画面へ放り込む！
                 NavigationLink {
-                    THPracticeView(repo: repo, store: store, sound: sound)
+                    PhonicsAICheckView(targetSymbol: expectedMLClass)
                 } label: {
-                    NavButtonLikeRow(icon: "mic", title: "話す練習（録音）")
+                    // ついでにボタンの見た目も少し「テストっぽく」カッコよく変更！
+                    NavButtonLikeRow(icon: "mic.badge.plus", title: "AI発音テストに挑戦！")
                 }
                 .buttonStyle(.plain)
             }
@@ -73,4 +81,3 @@ private struct NavButtonLikeRow: View {
         .cornerRadius(16)
     }
 }
-

@@ -55,8 +55,8 @@ struct PhonemeData {
         PhonemeItem(symbol: "θ", word: "think", category: .fricative, isAISupported: true),
         PhonemeItem(symbol: "ð", word: "this", category: .fricative, isAISupported: true),
         
-        PhonemeItem(symbol: "f", word: "fan", category: .fricative, isAISupported: false),
-        PhonemeItem(symbol: "v", word: "van", category: .fricative, isAISupported: false),
+        PhonemeItem(symbol: "f", word: "fan", category: .fricative, isAISupported: true),
+        PhonemeItem(symbol: "v", word: "van", category: .fricative, isAISupported: true),
         PhonemeItem(symbol: "s", word: "sea", category: .fricative, isAISupported: false),
         PhonemeItem(symbol: "z", word: "zoo", category: .fricative, isAISupported: false),
         PhonemeItem(symbol: "ʃ", word: "she", category: .fricative, isAISupported: false),
