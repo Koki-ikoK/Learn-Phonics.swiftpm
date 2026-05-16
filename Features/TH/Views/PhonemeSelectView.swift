@@ -37,15 +37,14 @@ struct PhonemeSelectView: View {
                     .padding(.top, 20)
                     
                     // 2. 今日のトレーニング（目立つカード）
-                    NavigationLink {
-                        let dailyTargets = ["fan", "van", "think", "this"]
-                        let randomTarget = dailyTargets.randomElement() ?? "fan"
-                        PhonicsAICheckView(targetSymbol: randomTarget)
-                    } label: {
-                        DailyTrainingCard()
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                    .padding(.horizontal)
+                                        NavigationLink {
+                                            // 🌟 ここを超シンプルに変更！
+                                            DailyAITrainingView()
+                                        } label: {
+                                            DailyTrainingCard()
+                                        }
+                                        .buttonStyle(PlainButtonStyle())
+                                        .padding(.horizontal)
 
                     // 個別トレーニングのヘッダー
                     VStack(alignment: .leading, spacing: 4) {
@@ -194,6 +193,7 @@ struct PhonemeCard: View {
 // DailyTrainingCard はそのまま（オレンジのグラデーションはダーク背景にめちゃくちゃ映えます）
 struct DailyTrainingCard: View {
     @AppStorage("streakCount") private var streakCount = 0
+    @AppStorage("isDailyCompleted") private var isDailyCompleted = false // 🌟 追加
 
     var body: some View {
         HStack(spacing: 16) {
@@ -202,17 +202,23 @@ struct DailyTrainingCard: View {
                     .fill(.white.opacity(0.2))
                     .frame(width: 56, height: 56)
                 
-                Image(systemName: streakCount > 0 ? "flame.fill" : "flame")
+                // 🌟 完了時はチェックマーク、未完了時は炎
+                Image(systemName: isDailyCompleted ? "checkmark.circle.fill" : (streakCount > 0 ? "flame.fill" : "flame"))
                     .font(.system(size: 30))
-                    .foregroundColor(streakCount > 0 ? .white : .white.opacity(0.6))
+                    .foregroundColor(streakCount > 0 || isDailyCompleted ? .white : .white.opacity(0.6))
             }
             
             VStack(alignment: .leading, spacing: 4) {
-                Text("今日のトレーニング")
+                // 🌟 テキストも完了状態に合わせて変更
+                Text(isDailyCompleted ? "トレーニング完了！" : "今日のトレーニング")
                     .font(.headline)
                     .foregroundColor(.white)
                 
-                if streakCount > 0 {
+                if isDailyCompleted {
+                    Text("素晴らしい！また明日も頑張ろう！")
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.9))
+                } else if streakCount > 0 {
                     Text("\(streakCount)日連続達成中！この調子！")
                         .font(.caption)
                         .foregroundColor(.white.opacity(0.9))
@@ -225,22 +231,26 @@ struct DailyTrainingCard: View {
             
             Spacer()
             
-            Image(systemName: "bolt.fill")
-                .font(.system(size: 24))
-                .foregroundColor(.white)
-                .padding(8)
-                .background(.white.opacity(0.2))
-                .clipShape(Circle())
+            // 完了時は右側の雷マークを消してスッキリさせる
+            if !isDailyCompleted {
+                Image(systemName: "bolt.fill")
+                    .font(.system(size: 24))
+                    .foregroundColor(.white)
+                    .padding(8)
+                    .background(.white.opacity(0.2))
+                    .clipShape(Circle())
+            }
         }
         .padding(16)
         .background(
+            // 🌟 完了時は緑のグラデーション、未完了時はオレンジ
             LinearGradient(
-                colors: [Color.orange, Color.red],
+                colors: isDailyCompleted ? [Color.green, Color.mint] : [Color.orange, Color.red],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
         )
         .cornerRadius(16)
-        .shadow(color: .orange.opacity(0.3), radius: 10, x: 0, y: 5)
+        .shadow(color: isDailyCompleted ? .green.opacity(0.3) : .orange.opacity(0.3), radius: 10, x: 0, y: 5)
     }
 }

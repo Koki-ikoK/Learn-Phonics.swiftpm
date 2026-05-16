@@ -25,23 +25,23 @@ struct PhonemeItem: Identifiable, Hashable, Codable {
 struct PhonemeData {
     static let all: [PhonemeItem] = [
         // MARK: - Monophthongs (短母音・長母音)
-        PhonemeItem(symbol: "æ", word: "cat", category: .monophthong, isAISupported: false),
-        PhonemeItem(symbol: "ɛ", word: "bed", category: .monophthong, isAISupported: false),
-        PhonemeItem(symbol: "ɪ", word: "sit", category: .monophthong, isAISupported: false),
-        PhonemeItem(symbol: "ɑ", word: "hot", category: .monophthong, isAISupported: false),
-        PhonemeItem(symbol: "ʌ", word: "cup", category: .monophthong, isAISupported: false),
-        PhonemeItem(symbol: "i", word: "see", category: .monophthong, isAISupported: false),
-        PhonemeItem(symbol: "u", word: "blue", category: .monophthong, isAISupported: false),
-        PhonemeItem(symbol: "ɔ", word: "thought", category: .monophthong, isAISupported: false),
-        PhonemeItem(symbol: "ʊ", word: "book", category: .monophthong, isAISupported: false),
-        PhonemeItem(symbol: "ə", word: "about", category: .monophthong, isAISupported: false), // Schwa
+        PhonemeItem(symbol: "æ", word: "cat", category: .monophthong, isAISupported: true),
+        PhonemeItem(symbol: "ɛ", word: "bed", category: .monophthong, isAISupported: true),
+        PhonemeItem(symbol: "ɪ", word: "sit", category: .monophthong, isAISupported: true),
+        PhonemeItem(symbol: "ɑ", word: "hot", category: .monophthong, isAISupported: true),
+        PhonemeItem(symbol: "ʌ", word: "cup", category: .monophthong, isAISupported: true),
+        PhonemeItem(symbol: "i", word: "see", category: .monophthong, isAISupported: true),
+        PhonemeItem(symbol: "u", word: "blue", category: .monophthong, isAISupported: true),
+        PhonemeItem(symbol: "ɔ", word: "thought", category: .monophthong, isAISupported: true),
+        PhonemeItem(symbol: "ʊ", word: "book", category: .monophthong, isAISupported: true),
+        PhonemeItem(symbol: "ə", word: "about", category: .monophthong, isAISupported: true), // Schwa
 
         // MARK: - Diphthongs (二重母音)
-        PhonemeItem(symbol: "eɪ", word: "say", category: .diphthong, isAISupported: false),
-        PhonemeItem(symbol: "aɪ", word: "sky", category: .diphthong, isAISupported: false),
-        PhonemeItem(symbol: "oʊ", word: "go", category: .diphthong, isAISupported: false),
-        PhonemeItem(symbol: "aʊ", word: "cow", category: .diphthong, isAISupported: false),
-        PhonemeItem(symbol: "ɔɪ", word: "boy", category: .diphthong, isAISupported: false),
+        PhonemeItem(symbol: "eɪ", word: "say", category: .diphthong, isAISupported: true),
+        PhonemeItem(symbol: "aɪ", word: "sky", category: .diphthong, isAISupported: true),
+        PhonemeItem(symbol: "oʊ", word: "go", category: .diphthong, isAISupported: true),
+        PhonemeItem(symbol: "aʊ", word: "cow", category: .diphthong, isAISupported: true),
+        PhonemeItem(symbol: "ɔɪ", word: "boy", category: .diphthong, isAISupported: true),
 
         // MARK: - R-Controlled Vowels (R音性母音)
         PhonemeItem(symbol: "ɝ", word: "bird", category: .rControlled, isAISupported: false),
@@ -81,8 +81,8 @@ struct PhonemeData {
         PhonemeItem(symbol: "ŋ", word: "sing", category: .nasal, isAISupported: false),
 
         // MARK: - Approximants (接近音)
-        PhonemeItem(symbol: "l", word: "light", category: .approximant, isAISupported: false),
-        PhonemeItem(symbol: "r", word: "right", category: .approximant, isAISupported: false),
+        PhonemeItem(symbol: "l", word: "light", category: .approximant, isAISupported: true),
+        PhonemeItem(symbol: "r", word: "right", category: .approximant, isAISupported: true),
         PhonemeItem(symbol: "w", word: "wet", category: .approximant, isAISupported: false),
         PhonemeItem(symbol: "j", word: "yes", category: .approximant, isAISupported: false),
     ]

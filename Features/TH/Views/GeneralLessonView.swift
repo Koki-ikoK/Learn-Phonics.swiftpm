@@ -2,7 +2,7 @@ import SwiftUI
 
 struct GeneralLessonView: View {
     let item: PhonemeItem
-
+    
     private var lessonData: (overview: String, mouthTip: String) {
         switch item.symbol.lowercased() {
         case "f": return ("上の歯で下唇を軽く押さえ、隙間から息を摩擦させて出す無声音です。", "下唇の内側を上の歯に軽く当てるのがコツ！")
@@ -18,7 +18,7 @@ struct GeneralLessonView: View {
         default: return ("/\(item.symbol)/ の発音の基礎を学ぶレッスンです。", "お手本の音声をよく聞いて、口の形を真似てみましょう。")
         }
     }
-
+    
     var body: some View {
         ZStack {
             // 🌟 1. 背景：漆黒ではなく、深みのある「ミッドナイト」グラデーション
@@ -27,8 +27,8 @@ struct GeneralLessonView: View {
             
             RadialGradient(colors: [Color.orange.opacity(0.15), .clear],
                            center: .topTrailing, startRadius: 0, endRadius: 500)
-                .ignoresSafeArea()
-
+            .ignoresSafeArea()
+            
             ScrollView {
                 VStack(spacing: 32) {
                     
@@ -56,7 +56,7 @@ struct GeneralLessonView: View {
                             .foregroundColor(.white.opacity(0.8))
                     }
                     .padding(.top, 40)
-
+                    
                     // 🌟 3. 概要カード：ガラスのような透明感（UltraThinMaterial）
                     VStack(alignment: .leading, spacing: 16) {
                         Label("Pronunciation Guide", systemImage: "flame.fill")
@@ -86,89 +86,84 @@ struct GeneralLessonView: View {
                             .stroke(Color.white.opacity(0.1), lineWidth: 1)
                     )
                     .padding(.horizontal)
-
+                    
                     // 🌟 4. アクションボタン：横並び
-                                        HStack(spacing: 20) {
-                                            NavigationLink {
-                                                GeneralPhonicsQuizView(symbol: item.symbol)
-                                                    .id(item.symbol)
-                                            } label: {
-                                                DarkSquareButton(icon: "ear.badge.waveform",
-                                                                title: "Listening",
-                                                                subtitle: "耳を鍛える",
-                                                                color: .orange)
-                                            }
-
-                                            NavigationLink {
-                                                let sym = item.symbol.lowercased()
-                                                // 🌟 全てのAI対応音素をここに復活！
-                                                if sym == "f" {
-                                                    PhonicsAICheckView(targetSymbol: "fan")
-                                                } else if sym == "v" {
-                                                    PhonicsAICheckView(targetSymbol: "van")
-                                                } else if sym == "θ" {
-                                                    PhonicsAICheckView(targetSymbol: "think")
-                                                } else if sym == "ð" {
-                                                    PhonicsAICheckView(targetSymbol: "this")
-                                                } else {
-                                                    ContentUnavailableView("Training...", systemImage: "mic.badge.plus")
-                                                        .preferredColorScheme(.dark)
-                                                }
-                                            } label: {
-                                                // 🌟 名前を「AI Check」に戻し、アイコンもAIっぽく！
-                                                DarkSquareButton(icon: "sparkles",
-                                                                title: "AI Check",
-                                                                subtitle: "発音をAI判定",
-                                                                color: .red)
-                                            }
-                                        }
-                                        .padding(.horizontal)
+                    HStack(spacing: 20) {
+                        NavigationLink {
+                            GeneralPhonicsQuizView(symbol: item.symbol)
+                                .id(item.symbol)
+                        } label: {
+                            DarkSquareButton(icon: "ear.badge.waveform",
+                                             title: "Listening",
+                                             subtitle: "耳を鍛える",
+                                             color: .orange)
+                        }
+                        
+                        NavigationLink {
+                            // 🌟 全てのAI対応音素を自動で判定画面に飛ばす！
+                            if item.isAISupported {
+                                PhonicsAICheckView(targetSymbol: item.word)
+                            } else {
+                                // まだAIを学習させていない音（Rec Onlyなど）はこちらを表示
+                                ContentUnavailableView("Training...", systemImage: "mic.badge.plus")
+                                    .preferredColorScheme(.dark)
+                            }
+                        } label: {
+                            // 🌟 対応・非対応でボタンの色や透明度を変えるとより親切です！
+                            DarkSquareButton(icon: "sparkles",
+                                             title: "AI Check",
+                                             subtitle: item.isAISupported ? "発音をAI判定" : "準備中",
+                                             color: item.isAISupported ? .red : .gray)
+                        }
+                        .disabled(!item.isAISupported) // 対応していない音素は押せなくする
+                        .padding(.horizontal)
+                    }
+                    .padding(.bottom, 60)
                 }
-                .padding(.bottom, 60)
             }
+            .navigationTitle("/\(item.symbol)/ Lesson")
+            .navigationBarTitleDisplayMode(.inline)
+            .preferredColorScheme(.dark) // 🌟 この画面を強制的にダークモードにする
         }
-        .navigationTitle("/\(item.symbol)/ Lesson")
-        .navigationBarTitleDisplayMode(.inline)
-        .preferredColorScheme(.dark) // 🌟 この画面を強制的にダークモードにする
     }
-}
-
-// 🌑 ダークモード専用のスクエアボタン
-struct DarkSquareButton: View {
-    let icon: String
-    let title: String
-    let subtitle: String
-    let color: Color
-
-    var body: some View {
-        VStack(spacing: 18) {
-            ZStack {
-                Circle()
-                    .fill(color.opacity(0.15))
-                    .frame(width: 64, height: 64)
+    
+    // 🌑 ダークモード専用のスクエアボタン
+    struct DarkSquareButton: View {
+        let icon: String
+        let title: String
+        let subtitle: String
+        let color: Color
+        
+        var body: some View {
+            VStack(spacing: 18) {
+                ZStack {
+                    Circle()
+                        .fill(color.opacity(0.15))
+                        .frame(width: 64, height: 64)
+                    
+                    Image(systemName: icon)
+                        .font(.title)
+                        .foregroundColor(color)
+                        .shadow(color: color.opacity(0.5), radius: 10)
+                }
                 
-                Image(systemName: icon)
-                    .font(.title)
-                    .foregroundColor(color)
-                    .shadow(color: color.opacity(0.5), radius: 10)
+                VStack(spacing: 6) {
+                    Text(title)
+                        .font(.headline)
+                        .foregroundColor(.white)
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.5))
+                }
             }
-            
-            VStack(spacing: 6) {
-                Text(title)
-                    .font(.headline)
-                    .foregroundColor(.white)
-                Text(subtitle)
-                    .font(.caption)
-                    .foregroundColor(.white.opacity(0.5))
-            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 28)
+            .background(Color.white.opacity(0.05)) // 🌟 わずかに白い透明
+            .cornerRadius(32)
+            .overlay(
+                RoundedRectangle(cornerRadius: 32)
+                    .stroke(Color.white.opacity(0.08), lineWidth: 1)
+            )
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 28)
-        .background(Color.white.opacity(0.05)) // 🌟 わずかに白い透明
-        .cornerRadius(32)
-        .overlay(
-            RoundedRectangle(cornerRadius: 32)
-                .stroke(Color.white.opacity(0.08), lineWidth: 1)
-        )
     }
 }
