@@ -1,3 +1,6 @@
+<img width="1640" height="2360" alt="simulator_screenshot_9649A81D-952F-4224-AB38-7D7FF62D2056" src="https://github.com/user-attachments/assets/9b579dce-236d-4275-9371-0ee64d0bc956" />
+<img width="1640" height="2360" alt="simulator_screenshot_1796D222-06EB-41B9-9279-AFB54A045F13" src="https://github.com/user-attachments/assets/c1e16446-2c87-429e-9cbd-7dc3416ab5a6" />
+<img width="1640" height="2360" alt="simulator_screenshot_236285B9-2EDB-4D56-9FDC-CAF2A031A5F3" src="https://github.com/user-attachments/assets/abbcdd64-ba43-46a2-93f4-121094e69b43" />
 # Learn Phonics 🗣️ (Swift Playgrounds Project)
 
 ### 概要
