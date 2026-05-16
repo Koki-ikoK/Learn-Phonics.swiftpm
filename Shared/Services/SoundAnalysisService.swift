@@ -1,128 +1,96 @@
 import Foundation
-import SoundAnalysis
 import AVFoundation
-import CoreML
-import Combine
-import UIKit
+import SoundAnalysis
 
-// 🌟 結果を受け取る影武者（ここにデバッグ用のプリント文を追加しました！）
-final class PhonicsResultsObserver: NSObject, SNResultsObserving, @unchecked Sendable {
-    var onResult: (@Sendable (String) -> Void)?
+// 🌟 @MainActor をつけることで、Swiftのデータ競合警告をすべて解消します
+@MainActor
+class SoundAnalysisService: NSObject, ObservableObject, SNResultsObserving {
+    private let audioEngine = AVAudioEngine()
+    private var streamAnalyzer: SNAudioStreamAnalyzer?
     
-    func request(_ request: SNRequest, didProduce result: SNResult) {
-        guard let res = result as? SNClassificationResult else { return }
-        
-        // 🌟 16時提出に向けた最強のデバッグ：AIが迷っている上位3つをコンソールに出す！
-        print("--- 🤖 AIの脳内 ---")
-        for classification in res.classifications.prefix(3) {
-            let percent = Int(classification.confidence * 100)
-            print("候補: \(classification.identifier) (自信: \(percent)%)")
-        }
-        print("-------------------")
-        
-        if let top = res.classifications.first {
-            let identifier = top.identifier
-            onResult?(identifier)
-        }
-    }
-    
-    func request(_ request: SNRequest, didFailWithError error: Error) {
-        print("❌ AI解析エラー: \(error.localizedDescription)")
-    }
-}
-
-// メインのサービス
-final class SoundAnalysisService: ObservableObject, @unchecked Sendable {
     @Published var lastResult: String = "---"
     @Published var isRunning = false
-    @Published var audioLevel: Float = 0.0
+    @Published var audioLevel: Float = 0
     
-    private var analyzer: SNAudioStreamAnalyzer?
-    private var resultsRequest: SNClassifySoundRequest?
-    private let analysisQueue = DispatchQueue(label: "com.example.AnalysisQueue")
-    private let audioEngine = AVAudioEngine()
-    private let observer = PhonicsResultsObserver()
-
-    init() {
-        setupAnalyzer()
-        
-        nonisolated(unsafe) let safeSelf = self
-        observer.onResult = { identifier in
-            DispatchQueue.main.async { safeSelf.lastResult = identifier }
-        }
-    }
-
-    private func setupAnalyzer() {
-        do {
-            guard let dataAsset = NSDataAsset(name: "PhonicsModel") else { return }
-            let tempDir = FileManager.default.temporaryDirectory
-            let tempModelURL = tempDir.appendingPathComponent("PhonicsClassifier.mlmodel")
-            
-            if FileManager.default.fileExists(atPath: tempModelURL.path) {
-                try FileManager.default.removeItem(at: tempModelURL)
-            }
-            try dataAsset.data.write(to: tempModelURL, options: .atomic)
-            
-            let compiledURL = try MLModel.compileModel(at: tempModelURL)
-            let model = try MLModel(contentsOf: compiledURL)
-            self.resultsRequest = try SNClassifySoundRequest(mlModel: model)
-            print("✅ AIモデルのアプリ内コンパイル完了！")
-        } catch {
-            print("❌ モデル準備エラー: \(error.localizedDescription)")
-        }
-    }
-
+    var onResult: ((String) -> Void)?
+    
     func start() throws {
-        DispatchQueue.main.async { self.lastResult = "判定中..." }
-        
-        #if os(iOS)
-        let session = AVAudioSession.sharedInstance()
-        try? session.setCategory(.playAndRecord, mode: .measurement, options: [.duckOthers, .defaultToSpeaker])
-        try? session.setActive(true, options: .notifyOthersOnDeactivation)
-        #endif
-        
-        let inputNode = audioEngine.inputNode
-        let format = inputNode.outputFormat(forBus: 0)
-        guard format.sampleRate > 0 else { return }
-        inputNode.removeTap(onBus: 0)
-        
-        let request = self.resultsRequest
-        let safeObserver = self.observer
-        
-        self.analysisQueue.sync {
-            let newAnalyzer = SNAudioStreamAnalyzer(format: format)
-            if let req = request {
-                try? newAnalyzer.add(req, withObserver: safeObserver)
-            }
-            self.analyzer = newAnalyzer
-        }
-        
-        nonisolated(unsafe) let safeSelf = self
-        
-        inputNode.installTap(onBus: 0, bufferSize: 8192, format: format) { buffer, time in
-            guard buffer.frameLength > 0, time.isSampleTimeValid, time.sampleTime >= 0 else { return }
+            // 1. 二重起動を確実に防止
+            if isRunning { stop() }
             
-            if let channelData = buffer.floatChannelData?[0] {
-                let frames = UnsafeBufferPointer(start: channelData, count: Int(buffer.frameLength))
-                var sum: Float = 0
-                for frame in frames { sum += frame * frame }
-                let rms = sqrt(sum / Float(frames.count))
-                DispatchQueue.main.async { safeSelf.audioLevel = rms }
+            let inputNode = audioEngine.inputNode
+            
+            // 🌟 重要：シミュレータのバグ対策
+            // 0Hzのまま進むとクラッシュするため、準備ができるまで待つかデフォルト値を設定
+            var inputFormat = inputNode.inputFormat(forBus: 0)
+            
+            if inputFormat.sampleRate == 0 {
+                // もし0Hzだったら、標準的な44.1kHzで強制上書きしてクラッシュを防ぐ
+                inputFormat = AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 1) ?? inputFormat
             }
             
-            safeSelf.analysisQueue.async {
-                safeSelf.analyzer?.analyze(buffer, atAudioFramePosition: time.sampleTime)
+            // 2. アナライザーの初期化
+            streamAnalyzer = SNAudioStreamAnalyzer(format: inputFormat)
+            
+            // 3. AIモデルのロード
+            guard let modelURL = Bundle.main.url(forResource: "PhonicsModel", withExtension: "mlmodelc") else {
+                print("❌ AIモデルが見つかりません")
+                return
             }
+            
+            let model = try MLModel(contentsOf: modelURL)
+            let request = try SNClassifySoundRequest(mlModel: model)
+            
+            try streamAnalyzer?.add(request, withObserver: self)
+            
+            // 4. マイクのタップ（録音開始）
+            // 既存のタップがあれば削除
+            inputNode.removeTap(onBus: 0)
+            
+            inputNode.installTap(onBus: 0, bufferSize: 1024, format: inputFormat) { [weak self] buffer, time in
+                self?.streamAnalyzer?.analyze(buffer, atAudioFramePosition: time.sampleTime)
+                
+                // 音量計算
+                let samples = Array(UnsafeBufferPointer(start: buffer.floatChannelData![0], count: Int(buffer.frameLength)))
+                let level = samples.map { $0 * $0 }.reduce(0, +) / Float(buffer.frameLength)
+                
+                Task { @MainActor in
+                    self?.audioLevel = level
+                }
+            }
+            
+            // 5. エンジン開始
+            audioEngine.prepare() // 🌟 開始前に念入りに準備
+            try audioEngine.start()
+            
+            self.isRunning = true
         }
-        
-        audioEngine.prepare()
-        try audioEngine.start()
-        DispatchQueue.main.async { self.isRunning = true }
-    }
-
+    
     func stop() {
-        audioEngine.stop()
-        audioEngine.inputNode.removeTap(onBus: 0)
-        DispatchQueue.main.async { self.isRunning = false }
+        if audioEngine.isRunning {
+            audioEngine.stop()
+            audioEngine.inputNode.removeTap(onBus: 0)
+        }
+        isRunning = false
+        lastResult = "---"
+        streamAnalyzer = nil
+    }
+    
+    // AIが音を検出した時の処理
+    nonisolated func request(_ request: SNRequest, didProduce result: SNResult) {
+        guard let res = result as? SNClassificationResult,
+              let top = res.classifications.first else { return }
+        
+        if top.confidence > 0.3 {
+            let label = top.identifier
+            Task { @MainActor in
+                self.lastResult = label
+                self.onResult?(label)
+            }
+        }
+    }
+    
+    nonisolated func request(_ request: SNRequest, didFailWithError error: Error) {
+        print("❌ AI解析エラー: \(error.localizedDescription)")
     }
 }
