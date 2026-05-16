@@ -13,8 +13,6 @@
 
 ---
 
-## 🏆 主な実績
-- **try! Swift Tokyo 2026 ハッカソン**: サイボウズ企業賞（Cybozu Corporate Award）受賞
 - **Apple Swift Student Challenge 2026**: 応募作品
 
 ---
