@@ -8,7 +8,6 @@
 
 [![Swift 6.0](https://img.shields.io/badge/Swift-6.0-orange.svg)](https://developer.apple.com/swift/)
 [![Platform](https://img.shields.io/badge/Platform-iPadOS%20%7C%20macOS-blue.svg)]()
-[![Award](https://img.shields.io/badge/Award-try!%20Swift%20Tokyo%202026%20Corporate%20Award-gold.svg)]()
 
 英語の正しい発音の基礎となる「フォニックス（音と文字の規則性）」を、独自のAI音声解析モデルを用いてインタラクティブに学べるiPad/Mac向けアプリケーションです。
 
